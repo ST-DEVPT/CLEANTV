@@ -69,7 +69,7 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 adb shell input keyevent KEYCODE_HOME
 ```
 
-(This repo's `tools/tv.py` works where the `adb` binary is blocked; see the README.)
+(This repo's `tools/tv.py` works where the `adb` binary is blocked; see [GUIDE.md](../GUIDE.md).)
 
 Useful checks:
 

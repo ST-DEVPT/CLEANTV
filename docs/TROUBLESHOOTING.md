@@ -1,7 +1,7 @@
 # Troubleshooting
 
 Things that bit us or contributors, so they don't bite you. Commands use `tools/tv.py`; see the
-[README](../README.md#doing-it-by-hand) for setting it up.
+[setup guide](../GUIDE.md#doing-it-by-hand) for setting it up.
 
 ## Connecting
 
@@ -34,7 +34,7 @@ Things that bit us or contributors, so they don't bite you. Commands use `tools/
 - **USB devices go dead while USB debugging is on**, seen on the Xiaomi Mi Box S: its firmware
   switches the USB port to ADB device mode, which cuts the power to a USB speaker or drive. Switch
   USB debugging off when you're done; the launcher doesn't need it.
-- **Close port 5555 when you're done**: plaintext, and a shell for anyone on the LAN when `ro.adb.secure=0`. Steps in the README FAQ.
+- **Close port 5555 when you're done**: plaintext, and a shell for anyone on the LAN when `ro.adb.secure=0`. Steps in the [guide FAQ](../GUIDE.md#questions-people-ask).
 - **The TV sits on a separate VLAN or IoT network** and `tools/tv.py` times out although debugging
   is on: the router keeps the computer from reaching it. Add a temporary firewall rule from your
   computer to the TV on tcp/5555 only, and remove it again when you close ADB. Opening the whole
