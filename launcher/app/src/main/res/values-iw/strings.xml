@@ -103,4 +103,25 @@
     <string name="race_live">%1$s · בשידור חי</string>
     <string name="race_finished">הדגל המשובץ</string>
     <string name="last_opened">נפתח לאחרונה %1$s</string>
+
+    <!-- Plugin store (PluginStoreActivity). -->
+    <string name="plugins">תוספים</string>
+    <string name="plugins_hint">ערכות נושא שפורסמו בקטלוג של מסך הבית. התקנת ערכה מחליפה את ערכת הנושא הנוכחית.</string>
+    <string name="plugins_loading">טוען את הקטלוג…</string>
+    <string name="plugins_empty">עדיין לא פורסמו תוספים.</string>
+    <string name="plugins_no_catalog">בגרסה זו אין קטלוג תוספים. התקינו גרסה שנבנתה ב-GitHub.</string>
+    <string name="plugins_no_storage">האחסון אינו זמין.</string>
+    <string name="plugins_error">לא ניתן היה להשלים: %1$s</string>
+    <string name="plugins_installed">מותקן</string>
+    <string name="plugins_update_available">יש עדכון</string>
+    <string name="plugins_by">%1$s מאת %2$s.</string>
+    <string name="plugins_confirm">%1$s\n\nגודל ההורדה: %2$s. הפעולה מחליפה את ערכת הנושא הנוכחית.</string>
+    <string name="plugins_install">התקנה</string>
+    <string name="plugins_reinstall">התקנה מחדש</string>
+    <string name="plugins_downloading">מתקין את %1$s…</string>
+    <string name="plugins_bad_checksum">הקובץ שהורד אינו תואם לסכום הביקורת שבקטלוג</string>
+    <string name="plugins_applied">%1$s הותקן</string>
+    <string name="plugins_remove">הסרת התוסף</string>
+    <string name="plugins_remove_hint">חזרה למראה המובנה.</string>
+    <string name="plugins_removed">התוסף הוסר</string>
 </resources>
