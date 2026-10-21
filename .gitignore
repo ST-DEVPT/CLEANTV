@@ -17,3 +17,8 @@ work/
 *.aab
 launcher/hs_err_pid*.log
 launcher/replay_pid*.log
+
+# Release signing keys never go in the repo.
+*.jks
+*.jks.b64
+*.keystore

@@ -1,0 +1,87 @@
+# Builds the launcher APK on GitHub and publishes it as a release, so nobody has to build it locally.
+#
+# Every push to main that touches launcher/ makes a new release v<versionName>.<run number>, marked latest.
+# The newest APK is always at:
+#   https://github.com/<owner>/<repo>/releases/latest/download/cleanyourtv.apk
+#
+# Signing: set these repository secrets once (Settings -> Secrets and variables -> Actions) so every
+# build is signed with the same key and installs over the previous one with `adb install -r`:
+#   SIGNING_KEYSTORE_BASE64   base64 of a .jks keystore
+#   SIGNING_STORE_PASSWORD, SIGNING_KEY_ALIAS, SIGNING_KEY_PASSWORD
+# Without them the APK is signed with the runner's throwaway debug key and each release needs an
+# uninstall first. See docs/releases.md.
+name: Release APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "launcher/**"
+      - ".github/workflows/release-apk.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-apk
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platforms;android-34 build-tools;34.0.0
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Release keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "SIGNING_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::SIGNING_KEYSTORE_BASE64 is not set; signing with a throwaway debug key. Updates will need an uninstall first."
+          fi
+
+      - name: Version
+        id: version
+        run: |
+          base=$(grep -oP "versionName'\)\.getOrElse\('\K[^']+" launcher/app/build.gradle)
+          echo "name=$base.${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+          # Above upstream's versionCode, and higher on every run.
+          echo "code=$((100 + ${{ github.run_number }}))" >> "$GITHUB_OUTPUT"
+
+      - name: Build
+        working-directory: launcher
+        env:
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_ALIAS: ${{ secrets.SIGNING_KEY_ALIAS }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon testReleaseUnitTest assembleRelease \
+            -PversionCode=${{ steps.version.outputs.code }} \
+            -PversionName=${{ steps.version.outputs.name }} \
+            -PpluginCatalogUrl=https://github.com/${{ github.repository }}/releases/download/plugins/catalog.json
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/cleanyourtv.apk"
+          cd "$RUNNER_TEMP" && sha256sum cleanyourtv.apk > cleanyourtv.apk.sha256
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: v${{ steps.version.outputs.name }}
+        run: |
+          gh release create "$TAG" \
+            "$RUNNER_TEMP/cleanyourtv.apk" "$RUNNER_TEMP/cleanyourtv.apk.sha256" \
+            --target "$GITHUB_SHA" --latest \
+            --title "Launcher $TAG" \
+            --notes "Built from $GITHUB_SHA. Install: \`adb install -r cleanyourtv.apk\`. SHA-256: \`$(cut -d' ' -f1 "$RUNNER_TEMP/cleanyourtv.apk.sha256")\`"

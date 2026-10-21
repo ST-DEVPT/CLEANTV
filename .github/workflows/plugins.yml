@@ -1,0 +1,56 @@
+# Publishes the plugin catalog. A plugin is a theme folder with a plugin.json (see docs/plugins.md).
+#
+# Pull requests: validate only. Push to main: build every plugin zip and catalog.json and upload them to
+# the rolling "plugins" release, which the launcher's plugin store reads:
+#   https://github.com/<owner>/<repo>/releases/download/plugins/catalog.json
+# Assets of plugins that were removed or bumped to a new version are deleted from the release.
+name: Plugins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "themes/**"
+      - "tools/build_plugins.py"
+      - ".github/workflows/plugins.yml"
+  pull_request:
+    paths:
+      - "themes/**"
+      - "tools/build_plugins.py"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: plugins
+  cancel-in-progress: false
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate and build
+        run: python3 tools/build_plugins.py --out dist
+
+      - name: Publish to the plugins release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view plugins >/dev/null 2>&1; then
+            gh release create plugins --title "Plugins" --latest=false \
+              --notes "Plugin catalog for the launcher's plugin store. Rebuilt on every change under themes/; do not edit by hand."
+          fi
+          # Zips first, catalog last, so a TV never reads a catalog naming a zip that is not there yet.
+          find dist -type f ! -name catalog.json -print0 | xargs -0 gh release upload plugins --clobber
+          gh release upload plugins dist/catalog.json --clobber
+          # Drop assets that are no longer in the catalog (removed plugins, old versions).
+          gh release view plugins --json assets --jq '.assets[].name' | while read -r name; do
+            [ -f "dist/$name" ] || gh release delete-asset plugins "$name" --yes
+          done

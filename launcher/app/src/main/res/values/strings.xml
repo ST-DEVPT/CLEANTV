@@ -107,4 +107,25 @@
     <!-- Cinematic top shelf (cinematic_home): the line under the focused dock app's name; %1$s is when it was
          last opened, e.g. "5 minutes ago" or "yesterday, 9:40 pm". -->
     <string name="last_opened">Last opened %1$s</string>
+
+    <!-- Plugin store (PluginStoreActivity): themes published to this repo's "plugins" release. -->
+    <string name="plugins">Plugins</string>
+    <string name="plugins_hint">Themes published to this launcher\'s catalog. Installing one replaces the current theme.</string>
+    <string name="plugins_loading">Loading the catalog…</string>
+    <string name="plugins_empty">No plugins published yet.</string>
+    <string name="plugins_no_catalog">This build has no plugin catalog. Install a release built on GitHub.</string>
+    <string name="plugins_no_storage">Storage is not available.</string>
+    <string name="plugins_error">Could not finish: %1$s</string>
+    <string name="plugins_installed">Installed</string>
+    <string name="plugins_update_available">Update available</string>
+    <string name="plugins_by">%1$s By %2$s.</string>
+    <string name="plugins_confirm">%1$s\n\nDownload size: %2$s. This replaces the current theme.</string>
+    <string name="plugins_install">Install</string>
+    <string name="plugins_reinstall">Reinstall</string>
+    <string name="plugins_downloading">Installing %1$s…</string>
+    <string name="plugins_bad_checksum">the download does not match the catalog checksum</string>
+    <string name="plugins_applied">%1$s installed</string>
+    <string name="plugins_remove">Remove plugin</string>
+    <string name="plugins_remove_hint">Back to the built-in look.</string>
+    <string name="plugins_removed">Plugin removed</string>
 </resources>

@@ -1,3 +1,89 @@
+# CLEANTV
+
+Strip the bloatware from an Android TV or Google TV over Wi-Fi and replace the ad-filled home screen
+with a clean launcher. A fork of [Gathin23/cleanyourtv](https://github.com/Gathin23/cleanyourtv) (MIT)
+with two additions:
+
+| | Upstream | This fork |
+|---|---|---|
+| **Launcher APK** | Built on your computer with Gradle and the Android SDK | Built by GitHub Actions on every push; download the latest release |
+| **Themes** | Pushed from a computer over ADB with `tools/theme.sh` | Published as **plugins** on GitHub, installed from the TV in **Launcher settings → Plugins** |
+
+## Install the launcher
+
+You need ADB on a computer on the same network as the TV, with USB/network debugging on
+(Settings → Device Preferences → About → press **Build** seven times → Developer options).
+
+```bash
+adb connect 192.168.1.50:5555
+curl -LO https://github.com/ST-DEVPT/CLEANTV/releases/latest/download/cleanyourtv.apk
+adb install -r cleanyourtv.apk
+adb shell cmd package set-home-activity com.gathin.tvhome/.MainActivity
+adb shell input keyevent KEYCODE_HOME
+```
+
+Debloating the TV itself (disabling the stock launcher, ads and telemetry) is unchanged from upstream:
+see [PROMPT.md](PROMPT.md) and the original guide below. Undo everything with `tools/restore.sh`.
+
+## Plugins
+
+A plugin is a theme folder under [`themes/`](themes/README.md): a `config.json` (dock, columns,
+colours, ...), optional wallpapers, and a `plugin.json`:
+
+```json
+{ "name": "My theme", "version": "1.0.0", "description": "Shown in the store.", "author": "you" }
+```
+
+**Publish:** on GitHub open `themes/` → **Add file → Upload files**, add `themes/<id>/` with those files
+and commit to `main`. The [Plugins workflow](.github/workflows/plugins.yml) validates it, zips it and
+updates the catalog in the [`plugins` release](https://github.com/ST-DEVPT/CLEANTV/releases/tag/plugins).
+Bump `version` to ship an update; delete the folder to unpublish.
+
+**Install:** on the TV, Home → Settings → **Launcher settings → Plugins** → pick one → Install. The
+launcher checks the download's SHA-256 against the catalog and reloads Home. **Remove plugin** goes back
+to the built-in look.
+
+Full details: [docs/plugins.md](docs/plugins.md).
+
+## Repository layout
+
+| Path | What |
+|---|---|
+| `launcher/` | The home screen app (Java, Gradle) |
+| `themes/` | Themes; each one with a `plugin.json` is published as a plugin |
+| `tools/build_plugins.py` | Validates plugins and builds the catalog (run by CI, or locally) |
+| `tools/` | Debloat, restore and theme scripts from upstream |
+| `examples/` | Tested debloat lists per TV model, from upstream contributors |
+| `.github/workflows/release-apk.yml` | Builds and releases the APK |
+| `.github/workflows/plugins.yml` | Publishes the plugin catalog |
+| `.github/workflows/ci.yml` | Tests, lint and APK size check on every push and PR |
+
+## Releases and signing
+
+Every push to `main` that touches `launcher/` publishes release `v<version>.<run>` with
+`cleanyourtv.apk` and its SHA-256. To let each new release install over the last one, set the signing
+secrets once (`SIGNING_KEYSTORE_BASE64`, `SIGNING_STORE_PASSWORD`, `SIGNING_KEY_ALIAS`,
+`SIGNING_KEY_PASSWORD`); [docs/plugins.md](docs/plugins.md#signing-key-do-this-once) shows how.
+
+## Pulling upstream changes
+
+```bash
+git fetch upstream
+git merge upstream/main
+```
+
+## Licence
+
+MIT, as upstream. See [LICENSE](LICENSE). The Outfit font is under the SIL Open Font License
+([launcher/FONT-LICENSE-OFL.txt](launcher/FONT-LICENSE-OFL.txt)).
+
+---
+
+# Original CleanYourTV guide
+
+Everything below is the upstream README, kept as reference for the debloat process and the list of
+tested TVs.
+
 <p align="center">
   <a href="https://cleanyour.tv"><img src="https://raw.githubusercontent.com/Gathin23/cleanyourtv/main/docs/banner.png" alt="CleanYourTV. Your TV, minus the ads. Strip the bloatware from any Android TV or Google TV over Wi-Fi and replace the ad-filled home screen with a clean launcher that looks like an Apple TV. No root, no cable, nothing uninstalled, and a one-line restore." width="800"></a>
 </p>

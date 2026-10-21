@@ -11,8 +11,25 @@ android {
         applicationId providers.gradleProperty('launcherApplicationId').getOrElse('com.gathin.tvhome')
         minSdk 26
         targetSdk 34
-        versionCode 6
-        versionName '2.5'
+        // CI passes -PversionCode=<run number> and -PversionName so every release installs over the last one.
+        versionCode providers.gradleProperty('versionCode').map { it.toInteger() }.getOrElse(6)
+        versionName providers.gradleProperty('versionName').getOrElse('2.5')
+        // Where the plugin store reads its catalog; CI points it at this repo's "plugins" release.
+        resValue 'string', 'plugin_catalog_url', providers.gradleProperty('pluginCatalogUrl').getOrElse('')
+    }
+
+    signingConfigs {
+        // Set by the release workflow from repository secrets, so every CI build has the same key and
+        // installs over the previous one. Without them the build falls back to the debug key.
+        release {
+            def ks = System.getenv('SIGNING_KEYSTORE_FILE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('SIGNING_STORE_PASSWORD')
+                keyAlias System.getenv('SIGNING_KEY_ALIAS')
+                keyPassword System.getenv('SIGNING_KEY_PASSWORD')
+            }
+        }
     }
 
     buildTypes {
@@ -21,8 +38,8 @@ android {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            // Sideloaded over ADB, never published: sign with the debug key so it installs over a debug build.
-            signingConfig signingConfigs.debug
+            // Sideloaded over ADB: the CI release key when its secrets are set, else the debug key.
+            signingConfig System.getenv('SIGNING_KEYSTORE_FILE') ? signingConfigs.release : signingConfigs.debug
         }
     }
 
